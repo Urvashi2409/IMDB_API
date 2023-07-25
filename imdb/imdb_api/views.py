@@ -20,11 +20,28 @@ def api_root(request, format=None):
         'streamplatform': reverse('streamplatform-list', request=request, format=format),
     })
 
-class ReviewListView(generics.ListCreateAPIView):
+class ReviewCreateView(generics.CreateAPIView):
+
+    serializer_class = ReviewSerializer
+
+    def perform_create(self, serializer):
+        pk= self.kwargs['pk']
+        movie = Watchlist.objects.get(pk=pk)
+        serializer.save(watchlist=movie)
+
+
+class ReviewListView(generics.ListAPIView):
+    
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
 
+    def get_queryset(self):
+        pk = self.kwargs['pk']
+        return Review.objects.filter(watchlist = pk)
+
+
 class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
+    
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
 
