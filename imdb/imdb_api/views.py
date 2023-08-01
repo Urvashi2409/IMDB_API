@@ -1,6 +1,8 @@
 from django.http import HttpResponse, JsonResponse, Http404
+
 from .models import Watchlist, StreamPlatform, Review
 from .serializers import WatchListSerializer, StreamPlatformSerializer, ReviewSerializer
+from .permissions import AdminOrReadOnly, ReviewUserOrReadOnly
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -10,6 +12,8 @@ from rest_framework import mixins
 from rest_framework import generics
 from rest_framework import viewsets
 from rest_framework.reverse import reverse
+from rest_framework.serializers import ValidationError
+from rest_framework.permissions import (IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly)
 
 # Create your views here.
 
@@ -23,15 +27,25 @@ def api_root(request, format=None):
 class ReviewCreateView(generics.CreateAPIView):
 
     serializer_class = ReviewSerializer
+    permission_classes = [ReviewUserOrReadOnly]
 
     def perform_create(self, serializer):
         pk= self.kwargs['pk']
         movie = Watchlist.objects.get(pk=pk)
+        review_user = self.request.user 
+        review_queryset = Review.objects.filter(review_user=review_user, watchlist=movie)
         serializer.save(watchlist=movie)
+
+        if review_queryset:
+            raise ValidationError("Can't review multiple times")
+        
+        def get_queryset():
+            return Review.objects.all() 
 
 
 class ReviewListView(generics.ListAPIView):
-    
+
+    permission_classes = [AdminOrReadOnly]
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
 
@@ -42,6 +56,7 @@ class ReviewListView(generics.ListAPIView):
 
 class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
     
+    permission_classes = [ReviewUserOrReadOnly]
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
 

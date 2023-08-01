@@ -9,13 +9,10 @@ router.register(r'list', views.WatchListViewSet, basename="watchlist")
 
 # name = streamplatform-detail hi rkhna 
 urlpatterns = [
-    # path('list/', views.movie_list, name='watchlist-list'),
-    # path('list/<int:pk>', views.movie_detail, name='watchlist-detail'),
     path('', include(router.urls)),
     path('list/<int:pk>/reviews/', views.ReviewListView.as_view(), name='review-list'),
     path('list/<int:pk>/review-create/', views.ReviewCreateView.as_view(), name='review-create'),
-    # path('stream/', streamplatform_list, name='streamplatform-list'),
-    # path('stream/<int:pk>', streamplatform_detail, name='streamplatform-detail'),
+    path('list/reviews/<int:pk>/', views.ReviewDetailView.as_view(), name='review-detail'),
     path('', views.api_root),
 ]
 
